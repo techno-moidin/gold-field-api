@@ -1,0 +1,17 @@
+/node_modules
+/data.json
+/package-lock.json
+db_backups
+yarn.lock
+.env
+.env.*
+/github
+/.vscode
+/public
+/examples
+logs/
+service_account.json
+.idea
+.vscode
+/examples
+/Buffer
