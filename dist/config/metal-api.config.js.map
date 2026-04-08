@@ -1,0 +1,1 @@
+{"version":3,"file":"metal-api.config.js","sourceRoot":"","sources":["../../src/config/metal-api.config.ts"],"names":[],"mappings":";;;AAAa,QAAA,cAAc,GAAG;IAC5B,MAAM,EAAE,OAAO,CAAC,GAAG,CAAC,aAAa,IAAI,EAAE;IACvC,OAAO,EAAE,OAAO,CAAC,GAAG,CAAC,kBAAkB,IAAI,2BAA2B;IACtE,qBAAqB,EAAE,QAAQ,CAC7B,OAAO,CAAC,GAAG,CAAC,iCAAiC,IAAI,GAAG,EACpD,EAAE,CACH;CACF,CAAC"}
