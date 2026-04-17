@@ -20,6 +20,7 @@ exports.GoldRatesModule = GoldRatesModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([gold_rate_entity_1.GoldRate])],
         providers: [gold_rates_service_1.GoldRatesService],
         controllers: [gold_rates_controller_1.GoldRatesController],
+        exports: [gold_rates_service_1.GoldRatesService],
     })
 ], GoldRatesModule);
 //# sourceMappingURL=gold-rates.module.js.map

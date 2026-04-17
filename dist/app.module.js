@@ -15,8 +15,17 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const gold_rates_module_1 = require("./gold-rates/gold-rates.module");
 const scheduler_module_1 = require("./scheduler/scheduler.module");
+const signals_module_1 = require("./signals/signals.module");
+const alerts_module_1 = require("./alerts/alerts.module");
+const uaemarts_module_1 = require("./uaemarts/uaemarts.module");
+const affiliate_module_1 = require("./affiliate/affiliate.module");
+const daily_alert_scheduler_module_1 = require("./scheduler/daily-alert-scheduler.module");
 const config_2 = require("./config");
 const gold_rate_entity_1 = require("./gold-rates/entities/gold-rate.entity");
+const subscriber_entity_1 = require("./alerts/entities/subscriber.entity");
+const signal_metrics_entity_1 = require("./uaemarts/entities/signal-metrics.entity");
+const affiliate_partner_entity_1 = require("./affiliate/entities/affiliate-partner.entity");
+const affiliate_click_entity_1 = require("./affiliate/entities/affiliate-click.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,7 +43,13 @@ exports.AppModule = AppModule = __decorate([
                 username: config_2.databaseConfig.username,
                 password: config_2.databaseConfig.password,
                 database: config_2.databaseConfig.database,
-                entities: [gold_rate_entity_1.GoldRate],
+                entities: [
+                    gold_rate_entity_1.GoldRate,
+                    subscriber_entity_1.Subscriber,
+                    signal_metrics_entity_1.SignalMetrics,
+                    affiliate_partner_entity_1.AffiliatePartner,
+                    affiliate_click_entity_1.AffiliateClick,
+                ],
                 synchronize: true,
                 logging: config_2.databaseConfig.host === 'localhost',
             }),
@@ -42,18 +57,15 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 ttl: config_2.redisConfig.ttl * 1000,
                 max: 1000,
-                stores: [
-                    {
-                        type: 'redis',
-                        options: {
-                            host: config_2.redisConfig.host,
-                            port: config_2.redisConfig.port,
-                        },
-                    },
-                ],
+                store: 'memory',
             }),
             gold_rates_module_1.GoldRatesModule,
             scheduler_module_1.SchedulerModule,
+            signals_module_1.SignalsModule,
+            alerts_module_1.AlertsModule,
+            uaemarts_module_1.UaeMartsModule,
+            affiliate_module_1.AffiliateModule,
+            daily_alert_scheduler_module_1.DailyAlertSchedulerModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

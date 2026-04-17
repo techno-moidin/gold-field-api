@@ -8,5 +8,6 @@ import { GoldRate } from './entities/gold-rate.entity';
   imports: [TypeOrmModule.forFeature([GoldRate])],
   providers: [GoldRatesService],
   controllers: [GoldRatesController],
+  exports: [GoldRatesService],
 })
 export class GoldRatesModule {}
