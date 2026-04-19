@@ -226,12 +226,18 @@ export class GoldRatesService {
         AVG(price_per_gram)::numeric as avgPrice,
         MIN(price_per_gram)::numeric as minPrice,
         MAX(price_per_gram)::numeric as maxPrice,
-        FIRST_VALUE(price_per_gram) OVER (ORDER BY date_trunc('${period}', timestamp) ROWS BETWEEN 1 PRECEDING AND 1 PRECEDING)::numeric as open,
-        LAST_VALUE(price_per_gram) OVER (ORDER BY date_trunc('${period}', timestamp) ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING)::numeric as close,
+        (SELECT price_per_gram FROM gold_rates r2 
+         WHERE date_trunc('${period}', r2.timestamp) = date_trunc('${period}', r1.timestamp) 
+         AND r2.region = r1.region AND r2.purity = r1.purity
+         ORDER BY r2.timestamp ASC LIMIT 1)::numeric as open,
+        (SELECT price_per_gram FROM gold_rates r2 
+         WHERE date_trunc('${period}', r2.timestamp) = date_trunc('${period}', r1.timestamp) 
+         AND r2.region = r1.region AND r2.purity = r1.purity
+         ORDER BY r2.timestamp DESC LIMIT 1)::numeric as close,
         COUNT(*)::integer as tradeCount
-      FROM gold_rates
+      FROM gold_rates r1
       WHERE region = $1 AND purity = $2
-      GROUP BY period
+      GROUP BY date_trunc('${period}', timestamp)
       ORDER BY period DESC
       LIMIT 100
     `;

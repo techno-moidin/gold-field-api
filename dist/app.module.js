@@ -20,6 +20,7 @@ const alerts_module_1 = require("./alerts/alerts.module");
 const uaemarts_module_1 = require("./uaemarts/uaemarts.module");
 const affiliate_module_1 = require("./affiliate/affiliate.module");
 const daily_alert_scheduler_module_1 = require("./scheduler/daily-alert-scheduler.module");
+const content_module_1 = require("./content/content.module");
 const config_2 = require("./config");
 const gold_rate_entity_1 = require("./gold-rates/entities/gold-rate.entity");
 const subscriber_entity_1 = require("./alerts/entities/subscriber.entity");
@@ -66,6 +67,7 @@ exports.AppModule = AppModule = __decorate([
             uaemarts_module_1.UaeMartsModule,
             affiliate_module_1.AffiliateModule,
             daily_alert_scheduler_module_1.DailyAlertSchedulerModule,
+            content_module_1.ContentModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

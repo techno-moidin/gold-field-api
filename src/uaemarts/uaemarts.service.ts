@@ -1,10 +1,11 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { SignalMetrics } from './entities/signal-metrics.entity';
 import { GoldRatesService } from '../gold-rates/gold-rates.service';
+import { GoldRate } from '../gold-rates/entities/gold-rate.entity';
 import { Region, GoldPurity } from '../gold-rates/enums/gold-rate.enums';
 
 export interface UaePremium {
@@ -56,6 +57,8 @@ export class UaeMartsService {
   constructor(
     @InjectRepository(SignalMetrics)
     private metricsRepository: Repository<SignalMetrics>,
+    @InjectRepository(GoldRate)
+    private goldRatesRepository: Repository<GoldRate>,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
     private goldRatesService: GoldRatesService,
@@ -85,18 +88,17 @@ export class UaeMartsService {
         100
       : 5;
 
+    const [average7d, average30d, trend] = await Promise.all([
+      this.calculateAveragePremium(7),
+      this.calculateAveragePremium(30),
+      this.calculateTrend(),
+    ]);
+
     const premium: UaePremium = {
       current: Number(currentPremium.toFixed(2)),
-      average7d: Number(
-        (currentPremium + Math.random() * 0.5 - 0.25).toFixed(2),
-      ),
-      average30d: Number((currentPremium + Math.random() * 1 - 0.5).toFixed(2)),
-      trend:
-        Math.random() > 0.5
-          ? 'stable'
-          : Math.random() > 0.5
-            ? 'increasing'
-            : 'decreasing',
+      average7d,
+      average30d,
+      trend,
       recommendation:
         currentPremium < 3
           ? 'Good time to buy - premium is low'
@@ -109,21 +111,132 @@ export class UaeMartsService {
     return premium;
   }
 
+  private async calculateAveragePremium(days: number): Promise<number> {
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const rates = await this.goldRatesRepository.find({
+      where: {
+        region: Region.UAE,
+        purity: GoldPurity.GOLD_24K,
+        timestamp: Between(startDate, now),
+      },
+      order: { timestamp: 'DESC' },
+    });
+
+    if (rates.length === 0) return 0;
+
+    let totalPremium = 0;
+    for (const rate of rates) {
+      const internationalSpot = Number(rate.pricePerGram) / 1.05;
+      const premium =
+        ((Number(rate.pricePerGram) - internationalSpot) / internationalSpot) *
+        100;
+      totalPremium += premium;
+    }
+
+    return Number((totalPremium / rates.length).toFixed(2));
+  }
+
+  private async calculateTrend(): Promise<
+    'increasing' | 'decreasing' | 'stable'
+  > {
+    const now = new Date();
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const [currentWeekRates, pastWeekRates] = await Promise.all([
+      this.goldRatesRepository.find({
+        where: {
+          region: Region.UAE,
+          purity: GoldPurity.GOLD_24K,
+          timestamp: Between(weekAgo, now),
+        },
+      }),
+      this.goldRatesRepository.find({
+        where: {
+          region: Region.UAE,
+          purity: GoldPurity.GOLD_24K,
+          timestamp: Between(twoWeeksAgo, weekAgo),
+        },
+      }),
+    ]);
+
+    if (currentWeekRates.length === 0 || pastWeekRates.length === 0) {
+      return 'stable';
+    }
+
+    const currentWeekAvg =
+      currentWeekRates.reduce((sum, r) => sum + Number(r.pricePerGram), 0) /
+      currentWeekRates.length;
+    const pastWeekAvg =
+      pastWeekRates.reduce((sum, r) => sum + Number(r.pricePerGram), 0) /
+      pastWeekRates.length;
+
+    const percentChange = ((currentWeekAvg - pastWeekAvg) / pastWeekAvg) * 100;
+
+    if (percentChange > 0.5) return 'increasing';
+    if (percentChange < -0.5) return 'decreasing';
+    return 'stable';
+  }
+
   async getBestTime(): Promise<BestTimeToBuy> {
     const cached = await this.cacheManager.get<BestTimeToBuy>(
       this.CACHE_KEY_TIMING,
     );
     if (cached) return cached;
 
-    const bestDays = ['Friday', 'Saturday', 'Thursday'];
-    const bestDay = bestDays[Math.floor(Math.random() * bestDays.length)];
+    const now = new Date();
+    const monthAgo = new Date();
+    monthAgo.setDate(monthAgo.getDate() - 30);
+
+    const rates = await this.goldRatesRepository.find({
+      where: {
+        region: Region.UAE,
+        purity: GoldPurity.GOLD_24K,
+        timestamp: Between(monthAgo, now),
+      },
+      order: { timestamp: 'ASC' },
+    });
+
+    const dayStats = new Map<string, { total: number; count: number }>();
+
+    for (const rate of rates) {
+      const day = rate.timestamp.toLocaleDateString('en-US', {
+        weekday: 'long',
+      });
+      const existing = dayStats.get(day) || { total: 0, count: 0 };
+      existing.total += Number(rate.pricePerGram);
+      existing.count += 1;
+      dayStats.set(day, existing);
+    }
+
+    let bestDay = 'Friday';
+    let minAvg = Infinity;
+
+    for (const [day, stats] of dayStats) {
+      const avg = stats.total / stats.count;
+      if (avg < minAvg) {
+        minAvg = avg;
+        bestDay = day;
+      }
+    }
+
+    const avgPrices = Array.from(dayStats.values()).map(
+      (s) => s.total / s.count,
+    );
+    const maxPrice = Math.max(...avgPrices);
+    const avgPriceDiff = Number((maxPrice - minAvg).toFixed(2));
 
     const timing: BestTimeToBuy = {
       bestDay,
       bestTime: '10 AM - 12 PM',
       reason:
         'Early morning tends to have better prices before weekend crowd. Friday and Saturday are popular shopping days in Dubai.',
-      averagePriceDiff: Number((Math.random() * 2 + 1).toFixed(2)),
+      averagePriceDiff: avgPriceDiff,
     };
 
     await this.cacheManager.set(this.CACHE_KEY_TIMING, timing, 86400);

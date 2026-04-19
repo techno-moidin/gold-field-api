@@ -11,6 +11,7 @@ import { AlertsModule } from './alerts/alerts.module';
 import { UaeMartsModule } from './uaemarts/uaemarts.module';
 import { AffiliateModule } from './affiliate/affiliate.module';
 import { DailyAlertSchedulerModule } from './scheduler/daily-alert-scheduler.module';
+import { ContentModule } from './content/content.module';
 import { databaseConfig, redisConfig } from './config';
 import { GoldRate } from './gold-rates/entities/gold-rate.entity';
 import { Subscriber } from './alerts/entities/subscriber.entity';
@@ -54,6 +55,7 @@ import { AffiliateClick } from './affiliate/entities/affiliate-click.entity';
     UaeMartsModule,
     AffiliateModule,
     DailyAlertSchedulerModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
