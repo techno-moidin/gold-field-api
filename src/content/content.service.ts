@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -25,7 +25,7 @@ export class ContentService {
   private readonly CACHE_KEY_PAGE = 'content:page:';
   private readonly CACHE_KEY_ALL = 'content:all';
 
-  constructor(private cacheManager: Cache) {}
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
   async getPage(
     slug: string,

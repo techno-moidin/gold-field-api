@@ -16,6 +16,7 @@ A NestJS backend for live gold rate tracking, historical analytics, and predicti
   - [x] Metal-API integration
   - [x] Mock data generator for development
   - [x] Scheduled rate updates
+  - [x] Content pages API
   - [ ] WebSocket for real-time push
 
 - [ ] **Phase 3: Analytics & Predictions**
@@ -76,7 +77,15 @@ METAL_API_UPDATE_INTERVAL_MINUTES=5
 npm run start:dev
 ```
 
-API available at: `http://localhost:3000`
+API available at: `http://localhost:8001`
+
+### 5. Seed Database (Optional)
+
+```bash
+npm run seed
+```
+
+This seeds all tables with mock data for development.
 
 ## API Endpoints
 
@@ -115,31 +124,31 @@ API available at: `http://localhost:3000`
 ### Get all live rates
 
 ```bash
-curl http://localhost:3000/gold-rates/live
+curl http://localhost:8001/gold-rates/live
 ```
 
 ### Get rates for India
 
 ```bash
-curl http://localhost:3000/gold-rates/live/INDIA
+curl http://localhost:8001/gold-rates/live/INDIA
 ```
 
 ### Get 24K gold in UAE
 
 ```bash
-curl http://localhost:3000/gold-rates/live/UAE/24K
+curl http://localhost:8001/gold-rates/live/UAE/24K
 ```
 
 ### Get historical data
 
 ```bash
-curl "http://localhost:3000/gold-rates/history?region=USA&purity=24K&limit=50"
+curl "http://localhost:8001/gold-rates/history?region=USA&purity=24K&limit=50"
 ```
 
 ### Convert 100 USD to INR
 
 ```bash
-curl "http://localhost:3000/gold-rates/convert?amount=100&fromRegion=USA&toRegion=INDIA"
+curl "http://localhost:8001/gold-rates/convert?amount=100&fromRegion=USA&toRegion=INDIA"
 ```
 
 ## Running Tests
@@ -176,6 +185,19 @@ src/
 │   └── gold-rates.module.ts
 ├── scheduler/           # Background jobs
 │   └── gold-rate-scheduler.service.ts
+├── content/            # Content pages
+│   ├── content.service.ts
+│   ├── content.controller.ts
+│   └── content.module.ts
+├── alerts/             # Telegram/WhatsApp alerts
+├── uaemarts/          # UAE Marts signal metrics
+├── affiliate/         # Affiliate partners
+├── scripts/            # Database seed scripts
+│   ├── seed-all.ts
+│   ├── seed-gold-rates.ts
+│   ├── seed-subscribers.ts
+│   ├── seed-signal-metrics.ts
+│   └── seed-affiliate.ts
 ├── app.controller.ts
 ├── app.service.ts
 ├── app.module.ts
@@ -196,7 +218,7 @@ src/
 | `REDIS_TTL`                         | 60          | Cache TTL in seconds     |
 | `METAL_API_KEY`                     | -           | Metal-API key (optional) |
 | `METAL_API_UPDATE_INTERVAL_MINUTES` | 5           | Rate update interval     |
-| `APP_PORT`                          | 3000        | Application port         |
+| `APP_PORT`                          | 8001        | Application port         |
 | `APP_ENV`                           | development | Environment              |
 
 ## License
